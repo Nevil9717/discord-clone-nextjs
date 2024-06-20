@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+generator docs {
+  provider = "node node_modules/prisma-docs-generator"
+}
+
+model Profile {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId String @unique @db.String
+  name    String
+  imageUrl     String? @db.String
+  email     String @unique @db.String
+
+  servers Server[]
+  members Member[]
+  channels Channel[]
+}
+
+model Server {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  imageUrl     String? @db.String
+  inviteCode String @db.String
+
+  profileId String @db.ObjectId
+  profile Profile @relation(fields:[profileId],references: [id])
+
+  members Member[]
+  channels Channel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum memberRole{
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+model Member {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  role    memberRole @default(GUEST)
+
+  profileId String @db.ObjectId
+  profile Profile @relation(fields:[profileId],references: [id])
+
+  serverId String @db.ObjectId
+  server Server @relation(fields:[serverId],references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum channelType{
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+model Channel {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  type    channelType @default(TEXT)
+
+  profileId String @db.ObjectId
+  profile Profile @relation(fields:[profileId],references: [id])
+
+  serverId String @db.ObjectId
+  server Server @relation(fields:[serverId],references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
